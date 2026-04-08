@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -47,7 +48,7 @@ export default function Home() {
           <p className="text-xl text-gray-600 max-w-md">
             使用 AI 智能提取小说中的人物信息，轻松管理和可视化人物关系
           </p>
-          <Button size="lg" className="mt-8" onClick={() => window.location.href = "/api/oauth/login"}>
+          <Button size="lg" className="mt-8" onClick={() => window.location.href = getLoginUrl()}>
             登录开始使用
           </Button>
         </div>

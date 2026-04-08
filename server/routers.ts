@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { novels } from "../drizzle/schema";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -7,6 +8,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { extractCharactersFromText, parseCharacterRelationships } from "./characterExtractor";
 import { uploadNovelFile, uploadMultipleFiles } from "./fileUploadHandler";
+import { generateCharacterAvatar } from "./avatarGenerator";
 
 export const appRouter = router({
   system: systemRouter,
@@ -44,6 +46,12 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return db.getNovelById(input.novelId);
       }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return db.getNovelById(input.id);
+      })
   }),
 
   characters: router({
@@ -100,6 +108,47 @@ export const appRouter = router({
       .input(z.object({ characterId: z.number() }))
       .query(async ({ input }) => {
         return db.getCharacterById(input.characterId);
+      }),
+
+    list: protectedProcedure
+      .input(z.object({ novelId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getCharactersByNovelId(input.novelId);
+      }),
+
+    getRelationships: protectedProcedure
+      .input(z.object({ novelId: z.number() }))
+      .query(async ({ input }) => {
+        return db.getCharacterRelationshipsByNovelId(input.novelId);
+      }),
+
+    generateAvatar: protectedProcedure
+      .input(z.object({
+        characterId: z.number(),
+        name: z.string(),
+        appearance: z.string(),
+        personality: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const avatarUrl = await generateCharacterAvatar(
+            input.name,
+            input.appearance,
+            input.personality || ""
+          );
+          
+          await db.updateCharacter(input.characterId, {
+            avatarUrl,
+          });
+          
+          return { success: true, avatarUrl };
+        } catch (error) {
+          console.error("[Avatar Generation Error]", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to generate avatar",
+          });
+        }
       }),
   }),
 

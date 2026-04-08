@@ -4,10 +4,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { AlertCircle, Download, Edit2, Loader2, Trash2, Wand2 } from "lucide-react";
+import { AlertCircle, Download, Edit2, Loader2, Trash2, Wand2, Network } from "lucide-react";
 import { useParams, useLocation } from "wouter";
 import { useState } from "react";
 import { toast } from "sonner";
+import MultiFileUploader from "@/components/MultiFileUploader";
 
 export default function NovelDetail() {
   const { novelId } = useParams<{ novelId: string }>();
@@ -100,6 +101,10 @@ export default function NovelDetail() {
     }
   };
 
+  const handleViewRelationships = () => {
+    setLocation(`/novel/${novelId}/relationships`);
+  };
+
   const handleExportMarkdown = (character: any) => {
     const markdown = `# 人物档案：${character.name}
 
@@ -146,7 +151,7 @@ export default function NovelDetail() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -178,9 +183,11 @@ export default function NovelDetail() {
               </Button>
             </CardContent>
           </Card>
+
+          <MultiFileUploader novelId={novelIdNum} onUploadSuccess={() => refetchCharacters()} />
         </div>
 
-        <div>
+        <div className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>项目信息</CardTitle>
@@ -194,6 +201,15 @@ export default function NovelDetail() {
                 <p className="text-gray-600">人物总数</p>
                 <p className="font-medium text-lg">{characters?.length || 0}</p>
               </div>
+              <Button
+                onClick={handleViewRelationships}
+                disabled={!characters || characters.length === 0}
+                className="w-full mt-4"
+                variant="outline"
+              >
+                <Network className="w-4 h-4 mr-2" />
+                查看关系网络
+              </Button>
             </CardContent>
           </Card>
         </div>
