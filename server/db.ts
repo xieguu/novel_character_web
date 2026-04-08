@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, novels, characters, characterRelationships, InsertCharacter } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,92 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Novel queries
+export async function createNovel(userId: number, title: string, description: string | null, content: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(novels).values({
+    userId,
+    title,
+    description,
+    content,
+  });
+  return result;
+}
+
+export async function getNovelsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.select().from(novels).where(eq(novels.userId, userId));
+}
+
+export async function getNovelById(novelId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(novels).where(eq(novels.id, novelId)).limit(1);
+  return result[0];
+}
+
+// Character queries
+export async function createCharacter(novelId: number, characterData: Omit<InsertCharacter, 'novelId'>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(characters).values({
+    novelId,
+    ...characterData,
+  });
+}
+
+export async function getCharactersByNovelId(novelId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.select().from(characters).where(eq(characters.novelId, novelId));
+}
+
+export async function updateCharacter(characterId: number, updates: Partial<InsertCharacter>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(characters).set(updates).where(eq(characters.id, characterId));
+}
+
+export async function deleteCharacter(characterId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(characters).where(eq(characters.id, characterId));
+}
+
+export async function getCharacterById(characterId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(characters).where(eq(characters.id, characterId)).limit(1);
+  return result[0];
+}
+
+// Character relationship queries
+export async function createCharacterRelationship(novelId: number, characterId1: number, characterId2: number, relationshipType: string, description?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(characterRelationships).values({
+    novelId,
+    characterId1,
+    characterId2,
+    relationshipType,
+    description,
+  });
+}
+
+export async function getCharacterRelationshipsByNovelId(novelId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.select().from(characterRelationships).where(eq(characterRelationships.novelId, novelId));
+}

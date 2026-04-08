@@ -25,4 +25,68 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Novels table: stores novel projects uploaded by users
+ */
+export const novels = mysqlTable("novels", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  content: text("content").notNull(), // Raw novel text
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Novel = typeof novels.$inferSelect;
+export type InsertNovel = typeof novels.$inferInsert;
+
+/**
+ * Characters table: stores extracted character information
+ */
+export const characters = mysqlTable("characters", {
+  id: int("id").autoincrement().primaryKey(),
+  novelId: int("novelId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  identity: text("identity"), // Role/profession
+  personality: text("personality"), // Character traits
+  appearance: text("appearance"), // Physical description
+  motivation: text("motivation"), // Goals and motivations
+  relationships: text("relationships"), // JSON string of relationships
+  avatarUrl: varchar("avatarUrl", { length: 512 }), // AI-generated avatar image URL
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Character = typeof characters.$inferSelect;
+export type InsertCharacter = typeof characters.$inferInsert;
+
+/**
+ * Character relationships table: stores relationship data for network visualization
+ */
+export const characterRelationships = mysqlTable("character_relationships", {
+  id: int("id").autoincrement().primaryKey(),
+  novelId: int("novelId").notNull(),
+  characterId1: int("characterId1").notNull(),
+  characterId2: int("characterId2").notNull(),
+  relationshipType: varchar("relationshipType", { length: 100 }).notNull(), // e.g., "friend", "enemy", "family", "colleague"
+  description: text("description"), // Relationship description
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CharacterRelationship = typeof characterRelationships.$inferSelect;
+export type InsertCharacterRelationship = typeof characterRelationships.$inferInsert;
+
+/**
+ * Uploads table: tracks file uploads for batch processing
+ */
+export const uploads = mysqlTable("uploads", {
+  id: int("id").autoincrement().primaryKey(),
+  novelId: int("novelId").notNull(),
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileSize: int("fileSize").notNull(),
+  uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+});
+
+export type Upload = typeof uploads.$inferSelect;
+export type InsertUpload = typeof uploads.$inferInsert;
