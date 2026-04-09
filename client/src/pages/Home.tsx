@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, Plus, Users, Network, Sparkles, LogOut, FileText, ChevronRight, Upload } from "lucide-react";
-import { useState, useRef } from "react";
+import { BookOpen, Plus, Users, Network, Sparkles, LogOut, ChevronRight, FileText } from "lucide-react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 
@@ -15,9 +15,7 @@ export default function Home() {
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [, setLocation] = useLocation();
   const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({ title: "", description: "", content: "" });
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState({ title: "", description: "" });
 
   const utils = trpc.useUtils();
 
@@ -27,8 +25,7 @@ export default function Home() {
 
   const createNovelMutation = trpc.novels.create.useMutation({
     onSuccess: (data) => {
-      setFormData({ title: "", description: "", content: "" });
-      setUploadedFiles([]);
+      setFormData({ title: "", description: "" });
       setIsCreating(false);
       utils.novels.list.invalidate();
       toast.success("项目创建成功！");
@@ -41,39 +38,17 @@ export default function Home() {
     },
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
 
-    const file = files[0];
-    if (!file.name.endsWith(".txt")) {
-      toast.error("仅支持 .txt 格式文件");
-      return;
-    }
-
-    try {
-      const text = await file.text();
-      setFormData(prev => ({ ...prev, content: text }));
-      setUploadedFiles([file]);
-      toast.success(`已加载文件: ${file.name}`);
-    } catch {
-      toast.error("文件读取失败");
-    }
-  };
 
   const handleCreate = () => {
     if (!formData.title.trim()) {
       toast.error("请输入项目名称");
       return;
     }
-    if (!formData.content.trim()) {
-      toast.error("请输入小说内容或上传文件");
-      return;
-    }
     createNovelMutation.mutate({
       title: formData.title,
       description: formData.description || undefined,
-      content: formData.content,
+      content: "", // 空内容，用户稍后在项目详情页添加
     });
   };
 
@@ -215,46 +190,9 @@ export default function Home() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5 text-foreground">小说内容 *</label>
-                  <div className="space-y-2">
-                    <Textarea
-                      placeholder="粘贴小说文本内容..."
-                      value={formData.content}
-                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                      rows={6}
-                      className="resize-none"
-                    />
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <Upload className="w-3.5 h-3.5" />
-                        上传 .txt 文件
-                      </Button>
-                      {uploadedFiles.length > 0 && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <FileText className="w-3 h-3" />
-                          {uploadedFiles[0].name}
-                        </span>
-                      )}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".txt"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                    </div>
-                  </div>
-                </div>
                 <Button
                   onClick={handleCreate}
-                  disabled={!formData.title.trim() || !formData.content.trim() || createNovelMutation.isPending}
+                  disabled={!formData.title.trim() || createNovelMutation.isPending}
                   className="w-full"
                 >
                   {createNovelMutation.isPending ? (
@@ -266,6 +204,7 @@ export default function Home() {
                     "创建项目"
                   )}
                 </Button>
+                <p className="text-xs text-muted-foreground text-center">创建后可在项目详情页上传或粘贴小说文本</p>
               </div>
             </DialogContent>
           </Dialog>
