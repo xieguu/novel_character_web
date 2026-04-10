@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import CharacterRelationshipGraph from "@/components/CharacterRelationshipGraph";
+import CharacterRelationshipGraphOptimized from "@/components/CharacterRelationshipGraphOptimized";
 import { useState } from "react";
 import { ArrowLeft, User, Network } from "lucide-react";
 
@@ -72,7 +72,7 @@ export default function CharacterRelationships() {
                     <p className="text-muted-foreground">还没有人物信息，请先提取人物</p>
                   </div>
                 ) : (
-                  <CharacterRelationshipGraph
+                  <CharacterRelationshipGraphOptimized
                     characters={characters}
                     relationships={relationships}
                     onCharacterClick={setSelectedCharacter}

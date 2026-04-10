@@ -15,6 +15,7 @@ import {
 import { useParams, useLocation } from "wouter";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
+import CharacterCard from "@/components/CharacterCard";
 
 export default function NovelDetail() {
   const { novelId } = useParams<{ novelId: string }>();
@@ -452,96 +453,15 @@ ${character.relationships || "暂无描述"}
           ) : characters && characters.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {characters.map((character) => (
-                <Card key={character.id} className="group hover:shadow-md transition-all duration-200 overflow-hidden">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start gap-3">
-                      {/* Avatar */}
-                      <div className="relative flex-shrink-0">
-                        {character.avatarUrl ? (
-                          <img
-                            src={character.avatarUrl}
-                            alt={character.name}
-                            className="w-14 h-14 rounded-xl object-cover border border-border"
-                          />
-                        ) : (
-                          <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center border border-border/50">
-                            <User className="w-6 h-6 text-primary" />
-                          </div>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleGenerateAvatar(character);
-                          }}
-                          disabled={generateAvatarMutation.isPending}
-                          className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-card border border-border shadow-sm flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
-                          title="生成 AI 头像"
-                        >
-                          {generateAvatarMutation.isPending && generateAvatarMutation.variables?.characterId === character.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <ImageIcon className="w-3 h-3" />
-                          )}
-                        </button>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base line-clamp-1">{character.name}</CardTitle>
-                        <CardDescription className="line-clamp-1 mt-0.5">
-                          {character.identity || "身份未知"}
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2.5 text-sm pt-0">
-                    {character.personality && (
-                      <div>
-                        <p className="font-medium text-foreground text-xs mb-0.5">性格特征</p>
-                        <p className="text-muted-foreground text-xs line-clamp-2">{character.personality}</p>
-                      </div>
-                    )}
-                    {character.appearance && (
-                      <div>
-                        <p className="font-medium text-foreground text-xs mb-0.5">外貌描写</p>
-                        <p className="text-muted-foreground text-xs line-clamp-2">{character.appearance}</p>
-                      </div>
-                    )}
-                    {character.motivation && (
-                      <div>
-                        <p className="font-medium text-foreground text-xs mb-0.5">核心动机</p>
-                        <p className="text-muted-foreground text-xs line-clamp-2">{character.motivation}</p>
-                      </div>
-                    )}
-                    <div className="flex gap-1.5 pt-2 border-t border-border/50">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditCharacter(character)}
-                        className="flex-1 h-8 text-xs gap-1"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        编辑
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleExportMarkdown(character)}
-                        className="h-8 w-8 p-0"
-                        title="导出 Markdown"
-                      >
-                        <Download className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteCharacter(character.id)}
-                        className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
-                        title="删除"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <CharacterCard
+                  key={character.id}
+                  character={character}
+                  onEdit={handleEditCharacter}
+                  onDelete={handleDeleteCharacter}
+                  onExport={handleExportMarkdown}
+                  onGenerateAvatar={handleGenerateAvatar}
+                  isGeneratingAvatar={generateAvatarMutation.isPending && generateAvatarMutation.variables?.characterId === character.id}
+                />
               ))}
             </div>
           ) : (
