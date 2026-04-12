@@ -16,6 +16,7 @@ import { useParams, useLocation } from "wouter";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import CharacterCard from "@/components/CharacterCard";
+import { RandomCharacterGenerator } from "@/components/RandomCharacterGenerator";
 
 export default function NovelDetail() {
   const { novelId } = useParams<{ novelId: string }>();
@@ -286,6 +287,10 @@ ${character.relationships || "暂无描述"}
             {characters?.length || 0} 个人物
           </Badge>
           <div className="flex-1" />
+          <RandomCharacterGenerator 
+            novelId={parseInt(novelId || "0")}
+            onCharacterGenerated={() => refetchCharacters()}
+          />
           <Button
             variant="outline"
             size="sm"

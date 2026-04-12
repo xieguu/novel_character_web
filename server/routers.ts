@@ -9,6 +9,7 @@ import * as db from "./db";
 import { extractCharactersFromText, parseCharacterRelationships } from "./characterExtractor";
 import { uploadNovelFile, uploadMultipleFiles } from "./fileUploadHandler";
 import { generateCharacterAvatar } from "./avatarGenerator";
+import { generateRandomCharacter, generateMultipleRandomCharacters } from "./randomCharacterGenerator";
 
 export const appRouter = router({
   system: systemRouter,
@@ -222,6 +223,81 @@ export const appRouter = router({
           input.relationshipType,
           input.description
         );
+      }),
+  }),
+
+  randomCharacter: router({
+    generate: protectedProcedure
+      .input(z.object({
+        novelId: z.number(),
+        gender: z.string().optional(),
+        ageRange: z.string().optional(),
+        occupationType: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const character = await generateRandomCharacter({
+            gender: input.gender,
+            ageRange: input.ageRange,
+            occupationType: input.occupationType,
+          });
+
+          const savedCharacter = await db.createCharacter(input.novelId, {
+            name: character.name,
+            identity: character.identity,
+            personality: character.personality,
+            appearance: character.appearance,
+            motivation: character.motivation,
+            relationships: "",
+          });
+
+          return {
+            success: true,
+            character: { ...character, id: (savedCharacter as any).id },
+          };
+        } catch (error) {
+          console.error("[Random Character Generation Error]", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to generate random character",
+          });
+        }
+      }),
+
+    generateMultiple: protectedProcedure
+      .input(z.object({
+        novelId: z.number(),
+        count: z.number().min(1).max(10),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const characters = await generateMultipleRandomCharacters(input.count);
+
+          const savedCharacters = [];
+          for (const character of characters) {
+            const saved = await db.createCharacter(input.novelId, {
+              name: character.name,
+              identity: character.identity,
+              personality: character.personality,
+              appearance: character.appearance,
+              motivation: character.motivation,
+              relationships: "",
+            });
+            savedCharacters.push({ ...character, id: (saved as any).id });
+          }
+
+          return {
+            success: true,
+            characters: savedCharacters,
+            count: savedCharacters.length,
+          };
+        } catch (error) {
+          console.error("[Random Characters Generation Error]", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to generate random characters",
+          });
+        }
       }),
   }),
 
