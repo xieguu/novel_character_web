@@ -10,6 +10,8 @@ import { extractCharactersFromText, parseCharacterRelationships } from "./charac
 import { uploadNovelFile, uploadMultipleFiles } from "./fileUploadHandler";
 import { generateCharacterAvatar } from "./avatarGenerator";
 import { generateRandomCharacter, generateMultipleRandomCharacters } from "./randomCharacterGenerator";
+import { generateCharacterPDF, generateCharactersBatchPDF } from "./pdfExporter";
+import { storagePut } from "./storage";
 
 export const appRouter = router({
   system: systemRouter,
@@ -148,6 +150,82 @@ export const appRouter = router({
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to generate avatar",
+          });
+        }
+      }),
+
+    exportPDF: protectedProcedure
+      .input(z.object({
+        characterId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const character = await db.getCharacterById(input.characterId);
+          if (!character) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Character not found",
+            });
+          }
+
+          const pdfBuffer = await generateCharacterPDF({
+            id: character.id,
+            name: character.name,
+            identity: character.identity || undefined,
+            personality: character.personality || undefined,
+            appearance: character.appearance || undefined,
+            motivation: character.motivation || undefined,
+            avatarUrl: character.avatarUrl || undefined,
+          });
+
+          const fileKey = `pdf-exports/${character.id}-${character.name}-${Date.now()}.pdf`;
+          const { url } = await storagePut(fileKey, pdfBuffer, "application/pdf");
+
+          return { success: true, url, fileName: `${character.name}.pdf` };
+        } catch (error) {
+          console.error("[PDF Export Error]", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to export PDF",
+          });
+        }
+      }),
+
+    exportBatchPDF: protectedProcedure
+      .input(z.object({
+        novelId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          const characters = await db.getCharactersByNovelId(input.novelId);
+          if (characters.length === 0) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "No characters found",
+            });
+          }
+
+          const characterInfos = characters.map(c => ({
+            id: c.id,
+            name: c.name,
+            identity: c.identity || undefined,
+            personality: c.personality || undefined,
+            appearance: c.appearance || undefined,
+            motivation: c.motivation || undefined,
+            avatarUrl: c.avatarUrl || undefined,
+          }));
+
+          const pdfBuffer = await generateCharactersBatchPDF(characterInfos);
+
+          const fileKey = `pdf-exports/batch-${input.novelId}-${Date.now()}.pdf`;
+          const { url } = await storagePut(fileKey, pdfBuffer, "application/pdf");
+
+          return { success: true, url, fileName: `characters-batch.pdf`, characterCount: characters.length };
+        } catch (error) {
+          console.error("[Batch PDF Export Error]", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to export batch PDF",
           });
         }
       }),

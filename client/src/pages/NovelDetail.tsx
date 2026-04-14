@@ -80,6 +80,36 @@ export default function NovelDetail() {
     },
   });
 
+  const exportPDFMutation = (trpc.characters.exportPDF as any)?.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`已生成 PDF: ${data.fileName}`);
+      const link = document.createElement("a");
+      link.href = data.url;
+      link.download = data.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    onError: (error: any) => {
+      toast.error(`导出失败: ${error.message}`);
+    },
+  });
+
+  const exportBatchPDFMutation = trpc.characters.exportBatchPDF?.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`已生成批量 PDF: ${data.characterCount} 个人物`);
+      const link = document.createElement("a");
+      link.href = data.url;
+      link.download = data.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+    onError: (error: any) => {
+      toast.error(`导出失败: ${error.message}`);
+    },
+  }) as any;
+
   const uploadMultipleMutation = trpc.files.uploadMultiple.useMutation();
 
   const handleExtract = () => {
@@ -231,6 +261,18 @@ ${character.relationships || "暂无描述"}
     a.download = `${novel?.title || "人物档案"}_全部人物.md`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = (character: any) => {
+    exportPDFMutation.mutate({ characterId: character.id });
+  };
+
+  const handleExportBatchPDF = () => {
+    if (!characters || characters.length === 0) {
+      toast.error("没有人物可导出");
+      return;
+    }
+    exportBatchPDFMutation.mutate({ novelId: novelIdNum });
   };
 
   if (novelLoading) {
@@ -458,15 +500,16 @@ ${character.relationships || "暂无描述"}
           ) : characters && characters.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {characters.map((character) => (
-                <CharacterCard
-                  key={character.id}
-                  character={character}
-                  onEdit={handleEditCharacter}
-                  onDelete={handleDeleteCharacter}
-                  onExport={handleExportMarkdown}
-                  onGenerateAvatar={handleGenerateAvatar}
-                  isGeneratingAvatar={generateAvatarMutation.isPending && generateAvatarMutation.variables?.characterId === character.id}
-                />
+          <CharacterCard
+            key={character.id}
+            character={character}
+            onEdit={handleEditCharacter}
+            onDelete={handleDeleteCharacter}
+            onExport={handleExportMarkdown}
+            onExportPDF={handleExportPDF}
+            onGenerateAvatar={handleGenerateAvatar}
+            isGeneratingAvatar={generateAvatarMutation.isPending && editingCharacter?.id === character.id}
+          />
               ))}
             </div>
           ) : (

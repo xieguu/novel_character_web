@@ -90,3 +90,32 @@ export const uploads = mysqlTable("uploads", {
 
 export type Upload = typeof uploads.$inferSelect;
 export type InsertUpload = typeof uploads.$inferInsert;
+
+/**
+ * Project collaborators table: tracks users who have access to a novel project
+ */
+export const projectCollaborators = mysqlTable("project_collaborators", {
+  id: int("id").autoincrement().primaryKey(),
+  novelId: int("novelId").notNull(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["owner", "editor", "viewer"]).default("viewer").notNull(),
+  addedAt: timestamp("addedAt").defaultNow().notNull(),
+});
+
+export type ProjectCollaborator = typeof projectCollaborators.$inferSelect;
+export type InsertProjectCollaborator = typeof projectCollaborators.$inferInsert;
+
+/**
+ * Project shares table: tracks shareable links for projects
+ */
+export const projectShares = mysqlTable("project_shares", {
+  id: int("id").autoincrement().primaryKey(),
+  novelId: int("novelId").notNull(),
+  shareToken: varchar("shareToken", { length: 64 }).notNull().unique(),
+  role: mysqlEnum("role", ["editor", "viewer"]).default("viewer").notNull(),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProjectShare = typeof projectShares.$inferSelect;
+export type InsertProjectShare = typeof projectShares.$inferInsert;

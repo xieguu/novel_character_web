@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit2, Download, Trash2, ImageIcon, Loader2, Sparkles } from "lucide-react";
+import { Edit2, Download, Trash2, ImageIcon, Loader2, Sparkles, FileText } from "lucide-react";
 import type { Character } from "@shared/types";
 
 interface CharacterCardProps {
@@ -9,6 +9,7 @@ interface CharacterCardProps {
   onEdit: (character: Character) => void;
   onDelete: (characterId: number) => void;
   onExport: (character: Character) => void;
+  onExportPDF?: (character: Character) => void;
   onGenerateAvatar: (character: Character) => void;
   isGeneratingAvatar?: boolean;
 }
@@ -18,6 +19,7 @@ export default function CharacterCard({
   onEdit,
   onDelete,
   onExport,
+  onExportPDF,
   onGenerateAvatar,
   isGeneratingAvatar = false,
 }: CharacterCardProps) {
@@ -128,6 +130,17 @@ export default function CharacterCard({
           >
             <Download className="w-3 h-3" />
           </Button>
+          {onExportPDF && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onExportPDF(character)}
+              className="h-8 w-8 p-0 hover:bg-amber-500 hover:text-white hover:border-amber-500 transition-all"
+              title="导出 PDF"
+            >
+              <FileText className="w-3 h-3" />
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"

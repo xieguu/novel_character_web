@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CharacterRelationshipGraphOptimized from "@/components/CharacterRelationshipGraphOptimized";
+import { RelationshipEditDialog } from "@/components/RelationshipEditDialog";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ArrowLeft, User, Network } from "lucide-react";
 
 export default function CharacterRelationships() {
@@ -22,10 +24,20 @@ export default function CharacterRelationships() {
     { enabled: !!novelId }
   );
 
-  const { data: relationships = [] } = trpc.characters.getRelationships.useQuery(
+  const { data: relationships = [], refetch: refetchRelationships } = trpc.characters.getRelationships.useQuery(
     { novelId: parseInt(novelId || "0") },
     { enabled: !!novelId }
   );
+
+  const createRelationshipMutation = trpc.relationships.create.useMutation({
+    onSuccess: () => {
+      toast.success("关系已添加");
+      refetchRelationships();
+    },
+    onError: (error: any) => {
+      toast.error(`添加失败: ${error.message}`);
+    },
+  });
 
   if (novelLoading) {
     return (
@@ -156,6 +168,35 @@ export default function CharacterRelationships() {
                         {relationships.filter(rel => rel.characterId1 === selectedCharacter.id || rel.characterId2 === selectedCharacter.id).length === 0 && (
                           <p className="text-xs text-muted-foreground">暂无关系数据</p>
                         )}
+                      </div>
+
+                      {/* Add Relationship Buttons */}
+                      <div className="mt-3 space-y-2">
+                        {characters
+                          .filter(c => c.id !== selectedCharacter.id)
+                          .map((otherChar) => {
+                            const hasRelationship = relationships.some(
+                              rel =>
+                                (rel.characterId1 === selectedCharacter.id && rel.characterId2 === otherChar.id) ||
+                                (rel.characterId1 === otherChar.id && rel.characterId2 === selectedCharacter.id)
+                            );
+                            return (
+                              !hasRelationship && (
+                                <RelationshipEditDialog
+                                  key={otherChar.id}
+                                  novelId={parseInt(novelId || "0")}
+                                  character1Id={selectedCharacter.id}
+                                  character1Name={selectedCharacter.name}
+                                  character2Id={otherChar.id}
+                                  character2Name={otherChar.name}
+                                  onAdd={async (data) => {
+                                    await createRelationshipMutation.mutateAsync(data);
+                                  }}
+                                  isLoading={createRelationshipMutation.isPending}
+                                />
+                              )
+                            );
+                          })}
                       </div>
                     </div>
                   </div>
