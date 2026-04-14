@@ -119,3 +119,40 @@ export const projectShares = mysqlTable("project_shares", {
 
 export type ProjectShare = typeof projectShares.$inferSelect;
 export type InsertProjectShare = typeof projectShares.$inferInsert;
+
+/**
+ * Edit history table: tracks all changes to characters and relationships
+ */
+export const editHistory = mysqlTable("edit_history", {
+  id: int("id").autoincrement().primaryKey(),
+  novelId: int("novelId").notNull(),
+  userId: int("userId").notNull(),
+  entityType: mysqlEnum("entityType", ["character", "relationship"]).notNull(),
+  entityId: int("entityId").notNull(),
+  action: mysqlEnum("action", ["create", "update", "delete"]).notNull(),
+  changes: text("changes"), // JSON string of what changed
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EditHistory = typeof editHistory.$inferSelect;
+export type InsertEditHistory = typeof editHistory.$inferInsert;
+
+/**
+ * Character templates table: predefined character templates
+ */
+export const characterTemplates = mysqlTable("character_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  category: varchar("category", { length: 100 }).notNull(), // e.g., "protagonist", "antagonist", "supporting"
+  identity: text("identity"),
+  personality: text("personality"),
+  appearance: text("appearance"),
+  motivation: text("motivation"),
+  isPublic: int("isPublic").default(1).notNull(), // 1 = public, 0 = private
+  userId: int("userId"), // null for public templates
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CharacterTemplate = typeof characterTemplates.$inferSelect;
+export type InsertCharacterTemplate = typeof characterTemplates.$inferInsert;
