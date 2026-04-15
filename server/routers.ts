@@ -269,10 +269,11 @@ export const appRouter = router({
             characters: extractedCharacters,
           };
         } catch (error) {
-          console.error("[Extraction Error]", error);
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          console.error("[Extraction Error]", errorMessage, error);
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to extract characters",
+            message: `Failed to extract characters: ${errorMessage}`,
           });
         }
       }),
