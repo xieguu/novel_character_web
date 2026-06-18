@@ -19,9 +19,9 @@ export async function addCollaborator(
   role: "owner" | "editor" | "viewer"
 ) {
   try {
-    const db = await getDb();
-    if (!db) throw new Error("Database not available");
-    const result = await db.insert(projectCollaborators).values({
+    const database = await getDb();
+    if (!database) throw new Error("Database not available");
+    const result = await database.insert(projectCollaborators).values({
       novelId,
       userId,
       role,

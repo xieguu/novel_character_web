@@ -80,7 +80,7 @@ export default function NovelDetail() {
     },
   });
 
-  const exportPDFMutation = (trpc.characters.exportPDF as any)?.useMutation({
+  const exportPDFMutation = trpc.characters.exportPDF.useMutation({
     onSuccess: (data: any) => {
       toast.success(`已生成 PDF: ${data.fileName}`);
       const link = document.createElement("a");
@@ -95,7 +95,7 @@ export default function NovelDetail() {
     },
   });
 
-  const exportBatchPDFMutation = trpc.characters.exportBatchPDF?.useMutation({
+  const exportBatchPDFMutation = trpc.characters.exportBatchPDF.useMutation({
     onSuccess: (data: any) => {
       toast.success(`已生成批量 PDF: ${data.characterCount} 个人物`);
       const link = document.createElement("a");

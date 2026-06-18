@@ -12,6 +12,18 @@ import { generateCharacterAvatar } from "./avatarGenerator";
 import { generateRandomCharacter, generateMultipleRandomCharacters } from "./randomCharacterGenerator";
 import { generateCharacterPDF, generateCharactersBatchPDF } from "./pdfExporter";
 import { storagePut } from "./storage";
+import {
+  addCollaborator,
+  removeCollaborator,
+  updateCollaboratorRole,
+  getCollaborators,
+  createShareLink,
+  verifyShareLink,
+  revokeShareLink,
+  recordEdit,
+  getEditHistory,
+  checkPermission,
+} from "./collaborationService";
 
 export const appRouter = router({
   system: systemRouter,
@@ -403,6 +415,51 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         if (!ctx.user) throw new TRPCError({ code: "UNAUTHORIZED" });
         return uploadMultipleFiles(ctx.user.id, input.novelId, input.files);
+      }),
+  }),
+
+  collaboration: router({
+    addCollaborator: protectedProcedure
+      .input(z.object({
+        novelId: z.number(),
+        userId: z.number(),
+        role: z.enum(["owner", "editor", "viewer"]),
+      }))
+      .mutation(async ({ input }) => {
+        return addCollaborator(input.novelId, input.userId, input.role);
+      }),
+
+    removeCollaborator: protectedProcedure
+      .input(z.object({
+        novelId: z.number(),
+        userId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        return removeCollaborator(input.novelId, input.userId);
+      }),
+
+    getCollaborators: protectedProcedure
+      .input(z.object({ novelId: z.number() }))
+      .query(async ({ input }) => {
+        return getCollaborators(input.novelId);
+      }),
+
+    createShareLink: protectedProcedure
+      .input(z.object({
+        novelId: z.number(),
+        role: z.enum(["editor", "viewer"]),
+      }))
+      .mutation(async ({ input }) => {
+        return createShareLink(input.novelId, input.role);
+      }),
+
+    getEditHistory: protectedProcedure
+      .input(z.object({
+        novelId: z.number(),
+        limit: z.number().default(50),
+      }))
+      .query(async ({ input }) => {
+        return getEditHistory(input.novelId, input.limit);
       }),
   }),
 });
